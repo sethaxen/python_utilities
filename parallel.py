@@ -11,7 +11,7 @@ import sys
 import logging
 from copy import copy
 try:
-    import itertools.izip as zip
+    from itertools import izip as zip
 except ImportError:  # python 3
     pass
 
@@ -413,7 +413,7 @@ class Parallelizer(object):
                     tag = status.Get_tag()
                     if tag == tags.READY:
                         try:
-                            data = data_iterator.next()
+                            data = next(data_iterator)
                         except StopIteration:
                             logging.debug(
                                 "%sEnd of data iterator. Closing proc %d" % (
@@ -471,7 +471,7 @@ class Parallelizer(object):
                             comm.send(
                                 (result, data), dest=0, tag=tags.DONE)
                         else:
-                            fh.Write_shared(out_str % out_format(result))
+                            fh.Write_shared((out_str % out_format(result)).encode("utf-8"))
                             comm.send(
                                 (True, data), dest=0, tag=tags.DONE)
                     except:
@@ -500,6 +500,7 @@ if __name__ == "__main__":
 
     data_list = range(100)
     data_iterator = make_data_iterator(data_list, "test")
+
     parallelizer = Parallelizer(parallel_mode=FUTURES_THREADS_MODE,
                                 num_proc=4)
 
