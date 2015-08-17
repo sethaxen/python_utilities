@@ -10,6 +10,10 @@ import os
 import sys
 import logging
 from copy import copy
+try:
+    import itertools.izip as zip
+except ImportError:  # python 3
+    pass
 
 # upon import, figure out if MPI is available, and decide parallel_mode
 MPI_MODE = "mpi"
@@ -57,7 +61,7 @@ def make_data_iterator(data_entries, *iterables):
     iterator : Iterator of tuples, each with an item in `data_entries`
                followed by corresponding items in `iterables`.
     """
-    from itertools import izip, repeat, cycle
+    from itertools import repeat, cycle
     from collections import Iterator
 
     new_iterables = [iter(data_entries), ]
@@ -69,7 +73,7 @@ def make_data_iterator(data_entries, *iterables):
         else:
             new_iterables.append(repeat(iterable))
 
-    return izip(*new_iterables)
+    return zip(*new_iterables)
 
 
 def read_bash_var(var, default=None):
@@ -306,7 +310,7 @@ class Parallelizer(object):
                    logging_format=str):
         """Run in serial on a single processor."""
         if out_file is not None:
-            fh = open(out_file, "wb")
+            fh = open(out_file, "w")
 
         for data in data_iterator:
             try:
@@ -345,7 +349,7 @@ class Parallelizer(object):
         jobs_iterator = concurrent.futures.as_completed(jobs)
 
         if out_file is not None:
-            fh = open(out_file, "wb")
+            fh = open(out_file, "w")
 
         for i, job in enumerate(jobs_iterator):
             try:

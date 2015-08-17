@@ -84,11 +84,15 @@ def touch_dir(dirname):
                 logging.exception("Failed to create %s.", exc_info=True)
 
 
-def smart_open(filename, *args, **kwargs):
+def smart_open(filename, mode="r", *args, **kwargs):
     """Open file. Assume method of opening by extension.
 
     Parameters
     ----------
+    filename, str
+        Name of file
+    mode, str
+        Mode to open file in
     *args
         Input arguments
     **kwargs
@@ -99,8 +103,22 @@ def smart_open(filename, *args, **kwargs):
     File-like object : Opened file-like object.
     """
     if os.path.splitext(filename)[-1] == ".gz":
-        return gzip.GzipFile(filename, *args, **kwargs)
+        if len(mode) < 2:
+            mode += "b"
+        file_class = gzip.GzipFile
     elif os.path.splitext(filename)[-1] == ".bz2":
-        return bz2.BZ2File(filename, *args, **kwargs)
+        if len(mode) < 2:
+            mode += "b"
+        file_class = bz2.BZ2File
     else:
-        return open(filename, *args, **kwargs)
+        return open(filename, mode, *args, **kwargs)
+
+    class SmartOpen(file_class):
+        def write(self, text, *args, **kwargs):
+            if "b" in mode and not isinstance(text, bytes):
+                super(SmartOpen, self).write(text.encode("utf-8"), *args,
+                                             **kwargs)
+            else:
+                super(SmartOpen, self).write(text, *args, **kwargs)
+
+    return SmartOpen(filename, mode, *args, **kwargs)
