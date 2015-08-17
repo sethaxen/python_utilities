@@ -131,7 +131,7 @@ class Parallelizer(object):
         preferred_parallel_modes = copy(available_parallel_modes)
         logging.debug("Parallel modes %s are available." % repr(preferred_parallel_modes))
         self.rank = 0
-        self.set_num_proc(None)
+        self.num_proc = None
 
         if parallel_mode is not None:
             if parallel_mode not in ALL_PARALLEL_MODES:
@@ -173,51 +173,36 @@ class Parallelizer(object):
             elif parallel_mode is SERIAL_MODE:
                 mode_num_proc = 1
 
-            self.set_parallel_mode(parallel_mode)
-            self.set_num_proc(mode_num_proc)
+            self.parallel_mode = parallel_mode
+            self.num_proc = mode_num_proc
             break
 
         if self.is_master():
-            if self.get_num_proc() is None:
+            if self.num_proc is None:
                 proc_info_msg = "and all processors"
             else:
-                proc_info_msg = "and %d processors" % self.get_num_proc()
+                proc_info_msg = "and %d processors" % self.num_proc
             logging.info(
                 "Parallelizer initialized with mode %s %s." % (
-                    repr(self.get_parallel_mode()), proc_info_msg))
+                    repr(self.parallel_mode), proc_info_msg))
 
     def is_mpi(self):
-        return self.get_parallel_mode() == MPI_MODE
+        return self.parallel_mode == MPI_MODE
 
     def is_concurrent(self):
         return self.is_threads() or self.is_processes()
 
     def is_threads(self):
-        return self.get_parallel_mode() == FUTURES_THREADS_MODE
+        return self.parallel_mode == FUTURES_THREADS_MODE
 
     def is_processes(self):
-        return self.get_parallel_mode() == FUTURES_PROCESSES_MODE
+        return self.parallel_mode == FUTURES_PROCESSES_MODE
 
     def is_serial(self):
-        return self.get_parallel_mode() == SERIAL_MODE
-
-    def set_parallel_mode(self, parallel_mode):
-        self.parallel_mode = parallel_mode
-
-    def get_parallel_mode(self):
-        return self.parallel_mode
-
-    def set_num_proc(self, num_proc):
-        self.num_proc = num_proc
-
-    def get_num_proc(self):
-        return self.num_proc
-
-    def get_rank(self):
-        return self.rank
+        return self.parallel_mode == SERIAL_MODE
 
     def is_master(self):
-        return self.get_rank() == 0
+        return self.rank == 0
 
     def run(self, *args, **kwargs):
         r"""Execute a function in parallel. Return list of results.
@@ -345,10 +330,10 @@ class Parallelizer(object):
         """Run in parallel with concurrent.futures."""
         if self.is_threads():
             executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=self.get_num_proc())
+                max_workers=self.num_proc)
         else:
             executor = concurrent.futures.ProcessPoolExecutor(
-                max_workers=self.get_num_proc())
+                max_workers=self.num_proc)
 
         jobs = []
         jobs_dict = {}
@@ -401,7 +386,7 @@ class Parallelizer(object):
         comm = MPI.COMM_WORLD
         status = MPI.Status()   # get MPI status object
         tags = enum('READY', 'DONE', 'EXIT', 'START')
-        msg = "Proc:%d|" % self.get_rank()
+        msg = "Proc:%d|" % self.rank
 
         comm.Barrier()
         mode = MPI.MODE_WRONLY | MPI.MODE_CREATE
