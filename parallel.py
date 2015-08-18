@@ -185,7 +185,7 @@ class Parallelizer(object):
                                         FUTURES_PROCESSES_MODE)):
                 mode_num_proc = multiprocessing.cpu_count()
                 logging.info("num_proc is not specified. %s mode will use all %d processes" % (
-                    repr(FUTURES_THREADS_MODE), mode_num_proc))
+                    repr(parallel_mode), mode_num_proc))
             elif parallel_mode is SERIAL_MODE:
                 mode_num_proc = 1
 
