@@ -453,7 +453,7 @@ class Parallelizer(object):
                                 logging.info(
                                     logging_str % logging_format(data))
 
-                            if out_file is None:
+                            if out_file is None or result is self.fail_value:
                                 yield (result, data)
                             else:
                                 yield (True, data)
