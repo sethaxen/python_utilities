@@ -21,15 +21,15 @@ MPI_MODE = "mpi"
 FUTURES_THREADS_MODE = "threads"
 FUTURES_PROCESSES_MODE = "processes"
 SERIAL_MODE = "serial"
-ALL_PARALLEL_MODES = ( MPI_MODE,
-                       FUTURES_THREADS_MODE, FUTURES_PROCESSES_MODE,
-                       SERIAL_MODE )
+ALL_PARALLEL_MODES = (MPI_MODE,
+                      FUTURES_THREADS_MODE, FUTURES_PROCESSES_MODE,
+                      SERIAL_MODE)
 
 available_parallel_modes = []
 try:
     from mpi4py import MPI
     available_parallel_modes.append(MPI_MODE)
-except:
+except ImportError:
     pass
 
 try:
@@ -119,7 +119,7 @@ class Parallelizer(object):
     runtimes and each call is completely independent of all others."""
 
     def __init__(self, parallel_mode=None, num_proc=None,
-                 num_proc_bash_var=None):
+                 num_proc_bash_var=None, fail_value=False):
         """Choose mode and/or number of processors or use defaults.
 
         Parameters
@@ -132,31 +132,39 @@ class Parallelizer(object):
         num_proc_bash_var : str, optional (default None)
             Number of available processors will be read from bash variable.
             Ignored if `num_proc` is specified.
+        fail_value : any, optional (default False)
+            Result to be yielded if specific function evaluation failed.
         """
         preferred_parallel_modes = copy(available_parallel_modes)
-        logging.debug("Parallel modes %s are available." % repr(preferred_parallel_modes))
+        logging.debug("Parallel modes %s are available." %
+                      repr(preferred_parallel_modes))
+        self.fail_value = fail_value
         self.rank = 0
         self.num_proc = None
 
         if parallel_mode is not None:
             if parallel_mode not in ALL_PARALLEL_MODES:
-                raise KeyError("Parallel mode must be in %s." % (repr(ALL_PARALLEL_MODES)))
+                raise KeyError("Parallel mode must be in %s." %
+                               (repr(ALL_PARALLEL_MODES)))
 
             if parallel_mode not in preferred_parallel_modes:
                 if self.is_master():
-                    logging.warning("Parallel mode %s not available. Will auto-select a replacement." % (repr(parallel_mode)))
+                    logging.warning(
+                        "Parallel mode %s not available. Will auto-select a replacement." % (repr(parallel_mode)))
             else:
                 preferred_parallel_modes.pop(
                     preferred_parallel_modes.index(parallel_mode))
                 preferred_parallel_modes = ([parallel_mode, ] +
                                             preferred_parallel_modes)
-                logging.debug("Available parallel modes reorganized to %s." % (repr(preferred_parallel_modes)))
+                logging.debug("Available parallel modes reorganized to %s." % (
+                    repr(preferred_parallel_modes)))
 
         if num_proc is None:
             num_proc = read_bash_var(num_proc)
 
         for parallel_mode in preferred_parallel_modes:
-            logging.debug("Checking if mode %s is valid." % (repr(parallel_mode)))
+            logging.debug("Checking if mode %s is valid." %
+                          (repr(parallel_mode)))
             mode_num_proc = num_proc
             self.rank = 0
 
@@ -169,13 +177,15 @@ class Parallelizer(object):
             if (mode_num_proc is not None and mode_num_proc < 2
                     and parallel_mode is not SERIAL_MODE):
                 if self.is_master():
-                    logging.warning("Only %d processes available. %s mode not available." % (mode_num_proc, repr(parallel_mode)))
+                    logging.warning("Only %d processes available. %s mode not available." % (
+                        mode_num_proc, repr(parallel_mode)))
                     continue
             elif (mode_num_proc is None
                   and parallel_mode in (FUTURES_THREADS_MODE,
                                         FUTURES_PROCESSES_MODE)):
                 mode_num_proc = multiprocessing.cpu_count()
-                logging.info("num_proc is not specified. %s mode will use all %d processes" % (repr(FUTURES_THREADS_MODE), mode_num_proc))
+                logging.info("num_proc is not specified. %s mode will use all %d processes" % (
+                    repr(FUTURES_THREADS_MODE), mode_num_proc))
             elif parallel_mode is SERIAL_MODE:
                 mode_num_proc = 1
 
@@ -320,11 +330,12 @@ class Parallelizer(object):
                     fh.write(out_str % out_format(result))
                     yield (True, data)
 
-                if result is not False and logging_str is not None:
+                if result is not self.fail_value and logging_str is not None:
                     logging.info(logging_str % logging_format(data))
             except:
                 logging.error("Error running: %s" % str(data),
                               exc_info=True)
+                yield(self.fail_value, data)
 
     def concurrent_run(self, func, data_iterator, kwargs={}, out_file=None,
                        out_str="%s\n", out_format=str, logging_str=None,
@@ -349,10 +360,10 @@ class Parallelizer(object):
         if out_file is not None:
             fh = open(out_file, "w")
 
-        for i, job in enumerate(jobs_iterator):
+        for job in jobs_iterator:
+            data = jobs_dict[job]
             try:
                 result = job.result()
-                data = jobs_dict[job]
 
                 if out_file is None:
                     yield (result, data)
@@ -360,16 +371,18 @@ class Parallelizer(object):
                     fh.write(out_str % out_format(result))
                     yield (True, data)
 
-                if result is not False and logging_str is not None:
+                if result is not self.fail_value and logging_str is not None:
                     logging.info(logging_str % logging_format(data))
 
             except KeyboardInterrupt:
                 logging.error("Error running: %s" % str(data),
                               exc_info=True)
                 executor.shutdown()
+                yield(self.fail_value, data)
             except:
                 logging.error("Error running: %s" % str(data),
                               exc_info=True)
+                yield(self.fail_value, data)
 
         if out_file is not None:
             fh.close()
@@ -435,7 +448,8 @@ class Parallelizer(object):
                                 "%sReceived result %d from proc %d" % (
                                     msg, task_index, source))
 
-                            if result is not False and logging_str is not None:
+                            if (result is not self.fail_value and
+                                    logging_str is not None):
                                 logging.info(
                                     logging_str % logging_format(data))
 
@@ -469,7 +483,8 @@ class Parallelizer(object):
                             comm.send(
                                 (result, data), dest=0, tag=tags.DONE)
                         else:
-                            fh.Write_shared((out_str % out_format(result)).encode("utf-8"))
+                            fh.Write_shared(
+                                (out_str % out_format(result)).encode("utf-8"))
                             comm.send(
                                 (True, data), dest=0, tag=tags.DONE)
                     except:
@@ -477,7 +492,7 @@ class Parallelizer(object):
                             "%sError running: %s" % (msg, str(data)),
                             exc_info=True)
                         comm.send(
-                            (False, data), dest=0, tag=tags.DONE)
+                            (self.fail_value, data), dest=0, tag=tags.DONE)
                 elif tag == tags.EXIT:
                     break
 
