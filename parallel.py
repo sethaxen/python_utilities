@@ -10,6 +10,7 @@ import os
 import sys
 import logging
 from copy import copy
+import multiprocessing
 try:
     from itertools import izip as zip
 except ImportError:  # python 3
@@ -171,9 +172,10 @@ class Parallelizer(object):
                     logging.warning("Only %d processes available. %s mode not available." % (mode_num_proc, repr(parallel_mode)))
                     continue
             elif (mode_num_proc is None
-                  and parallel_mode is FUTURES_THREADS_MODE):
-                logging.warning("num_proc is not specified. %s mode not available" % (repr(FUTURES_THREADS_MODE)))
-                continue
+                  and parallel_mode in (FUTURES_THREADS_MODE,
+                                        FUTURES_PROCESSES_MODE)):
+                mode_num_proc = multiprocessing.cpu_count()
+                logging.info("num_proc is not specified. %s mode will use all %d processes" % (repr(FUTURES_THREADS_MODE), mode_num_proc))
             elif parallel_mode is SERIAL_MODE:
                 mode_num_proc = 1
 
@@ -182,13 +184,9 @@ class Parallelizer(object):
             break
 
         if self.is_master():
-            if self.num_proc is None:
-                proc_info_msg = "and all processors"
-            else:
-                proc_info_msg = "and %d processors" % self.num_proc
             logging.info(
-                "Parallelizer initialized with mode %s %s." % (
-                    repr(self.parallel_mode), proc_info_msg))
+                "Parallelizer initialized with mode %s and %d processors." % (
+                    repr(self.parallel_mode), self.num_proc))
 
     def is_mpi(self):
         return self.parallel_mode == MPI_MODE
@@ -501,8 +499,7 @@ if __name__ == "__main__":
     data_list = range(100)
     data_iterator = make_data_iterator(data_list, "test")
 
-    parallelizer = Parallelizer(parallel_mode=FUTURES_THREADS_MODE,
-                                num_proc=4)
+    parallelizer = Parallelizer(parallel_mode=FUTURES_THREADS_MODE)
 
     run_kwargs = {"out_file": "test_out.txt", "out_str": "%d\n",
                   "out_format": lambda x: x,
