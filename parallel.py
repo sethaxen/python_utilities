@@ -160,7 +160,7 @@ class Parallelizer(object):
                     repr(preferred_parallel_modes)))
 
         if num_proc is None:
-            num_proc = read_bash_var(num_proc)
+            num_proc = read_bash_var(num_proc_bash_var)
 
         for parallel_mode in preferred_parallel_modes:
             logging.debug("Checking if mode %s is valid." %
@@ -168,14 +168,14 @@ class Parallelizer(object):
             mode_num_proc = num_proc
             self.rank = 0
 
-            if parallel_mode is MPI_MODE:
+            if parallel_mode == MPI_MODE:
                 comm = MPI.COMM_WORLD
                 self.rank = comm.Get_rank()
                 mpi_num_proc = comm.Get_size()
                 mode_num_proc = mpi_num_proc
 
             if (mode_num_proc is not None and mode_num_proc < 2
-                    and parallel_mode is not SERIAL_MODE):
+                    and parallel_mode != SERIAL_MODE):
                 if self.is_master():
                     logging.warning("Only %d processes available. %s mode not available." % (
                         mode_num_proc, repr(parallel_mode)))
@@ -186,7 +186,7 @@ class Parallelizer(object):
                 mode_num_proc = multiprocessing.cpu_count()
                 logging.info("num_proc is not specified. %s mode will use all %d processes" % (
                     repr(parallel_mode), mode_num_proc))
-            elif parallel_mode is SERIAL_MODE:
+            elif parallel_mode == SERIAL_MODE:
                 mode_num_proc = 1
 
             self.parallel_mode = parallel_mode
@@ -330,7 +330,7 @@ class Parallelizer(object):
                     fh.write(out_str % out_format(result))
                     yield (True, data)
 
-                if result is not self.fail_value and logging_str is not None:
+                if result != self.fail_value and logging_str is not None:
                     logging.info(logging_str % logging_format(data))
             except:
                 logging.error("Error running: %s" % str(data),
@@ -371,7 +371,7 @@ class Parallelizer(object):
                     fh.write(out_str % out_format(result))
                     yield (True, data)
 
-                if result is not self.fail_value and logging_str is not None:
+                if result != self.fail_value and logging_str is not None:
                     logging.info(logging_str % logging_format(data))
 
             except KeyboardInterrupt:
@@ -448,12 +448,12 @@ class Parallelizer(object):
                                 "%sReceived result %d from proc %d" % (
                                     msg, task_index, source))
 
-                            if (result is not self.fail_value and
+                            if (result != self.fail_value and
                                     logging_str is not None):
                                 logging.info(
                                     logging_str % logging_format(data))
 
-                            if out_file is None or result is self.fail_value:
+                            if out_file is None or result == self.fail_value:
                                 yield (result, data)
                             else:
                                 yield (True, data)
