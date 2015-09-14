@@ -1,10 +1,9 @@
-"""Utilities for plotting.
+"""Color cycles for maximum contrast/viewability.
 
 Author: Seth Axen
 E-mail: seth.axen@gmail.com"""
 from collections import OrderedDict
 
-# Color schemes
 
 # Reference:
 # - KL Kelly. Color Eng. 1965. 3(6).
@@ -61,7 +60,3 @@ COLOR_ALPHABET = OrderedDict([
     ((1.000, 1.000, 0.502), 'xanthin'),
     ((1.000, 1.000, 0.000), 'yellow'),
     ((1.000, 0.314, 0.020), 'zinnia')])
-
-
-# Line styles
-LINESTYLES = ["-", "--", "-.", ":"]
