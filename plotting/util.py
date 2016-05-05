@@ -7,7 +7,7 @@ from collections import deque
 
 def rgb_to_hsv(rgb):
     """Convert RGB colors to HSV colors."""
-    r, g, b = tuple(map(float(rgb)))
+    r, g, b = tuple(map(float, rgb))
     if any([r > 1, g > 1, b > 1]):
         r /= 255.
         g /= 255.
@@ -34,7 +34,7 @@ def rgb_to_hsv(rgb):
 
 def hsv_to_rgb(hsv):
     """Convert HSV colors to RGB colors."""
-    h, s, v = tuple(map(float(hsv)))
+    h, s, v = tuple(map(float, hsv))
     c = v * s
     m = v - c
     hp = h / 60.
