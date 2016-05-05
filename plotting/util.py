@@ -52,8 +52,5 @@ def hsv_to_rgb(hsv):
 def lighten_rgb(rgb, p=0.):
     """Lighten RGB colors by percentage p of total."""
     h, s, v = rgb_to_hsv(rgb)
-    print(rgb)
-    print((h, s, v))
     hsv = (h, s, min(1, v + p))
-    print(hsv)
     return hsv_to_rgb(hsv)
