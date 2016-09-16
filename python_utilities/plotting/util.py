@@ -4,6 +4,8 @@ Author: Seth Axen
 E-mail: seth.axen@gmail.com"""
 from collections import deque
 
+import numpy as np
+
 
 def rgb_to_hsv(rgb):
     """Convert RGB colors to HSV colors."""
@@ -47,6 +49,35 @@ def hsv_to_rgb(hsv):
     else:
         rgb.rotate(hp / 2)
     return tuple(rgb)
+
+
+def rgb_to_yuv(rgb):
+    """Convert RGB colors to Y'UV colors, useful for comparison."""
+    rgbv = np.array(rgb).reshape(3, 1)
+    if np.any(rgbv > 1.):
+        rgbv = rgbv / 255.
+    yuv = np.dot(np.array([[ .299,    .587,    .114],
+                           [-.14713, -.28886,  .436],
+                           [ .615,   -.51499, -.10001]], dtype=np.double),
+                 rgbv)
+    return list(yuv)
+
+
+def yuv_to_rgb(yuv):
+    """Convert Y'UV colors to RGB colors."""
+    yuvv = np.array(yuv).reshape(3, 1)
+    rgb = np.dot(np.array([[1., 0.,      1.13983],
+                           [1., -.39465, -.58060],
+                           [1., 2.03211, 0.]], dtype=np.double),
+                 yuvv)
+    return list(rgb)
+
+
+def compute_yuv_dist(rgb1, rgb2):
+    """Compute Euclidean Y'UV distance between RGB colors."""
+    yuv1 = rgb_to_yuv(rgb1)
+    yuv2 = rgb_to_yuv(rgb2)
+    return float(sum((np.array(yuv1) - np.array(yuv2))**2)**.5)
 
 
 def lighten_rgb(rgb, p=0.):
