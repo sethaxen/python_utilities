@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='sdaxen_python_utilities',
-    packages=['python_utilities'],
+    packages=['python_utilities', 'python_utilities.plotting'],
     version='0.1.2',
     description='A collection of useful tools for common Python tasks',
     author='Seth Axen',
