@@ -25,7 +25,7 @@ In this example, we read in a file that contains a range of numbers.
 We then compute the product between each of those numbers and a single
 number. We do this in parallel, so that as each slave node is ready,
 the master sends it a number from the file. All results are logged
-to `log.txt`, and the results are saved to a gzipped file `products.txt.gz`.
+to `log.txt`, and the results are saved to a file `products.txt`.
 ```python
 from python_utilities.scripting import setup_logging
 from python_utilities.io_tools import smart_open
@@ -53,7 +53,7 @@ with smart_open("numbers.txt.gz", "r") as f:
 data_iterator = make_data_iterator(data_list)
 # use multiprocessing if available
 parallelizer = Parallelizer(parallel_mode="processes")
-run_kwargs = {"out_file": "products.txt.gz",  # save one result per line
+run_kwargs = {"out_file": "products.txt",  # save one result per line
               "out_str": "%d\n",  # formatting of output line
               "out_format": lambda x: x,  # modify result before saving
               "logging_str": "Multiplied by %d",  # format log line
