@@ -27,6 +27,7 @@ setup(
     description='A collection of useful tools for common Python tasks',
     author='Seth Axen',
     author_email='seth.axen@gmail.com',
+    license='MIT',
     url='https://github.com/sdaxen/python_utilities',
     download_url='https://github.com/sdaxen/python_utilities/tarball/0.1.3',
     keywords=['scripting', 'logging', 'io', 'plotting'],
