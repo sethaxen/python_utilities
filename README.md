@@ -25,31 +25,46 @@ In this example, we read in a file that contains a range of numbers.
 We then compute the product between each of those numbers and a single
 number. We do this in parallel, so that as each slave node is ready,
 the master sends it a number from the file. All results are logged
-to stdout, and the results are saved to a gzipped file `products.txt.gz`.
+to `log.txt`, and the results are saved to a gzipped file `products.txt.gz`.
 ```python
 from python_utilities.scripting import setup_logging
 from python_utilities.io_tools import smart_open
 from python_utilities.parallel import Parallelizer, make_data_iterator
 
 
+# Methods written for parallel have non-keyword (num1) and keyword (num2)
+# arguments. All keyword arguments must be constant across all parallel
+# runs, while non-keyword arguments may vary. Here, we will vary num1, but
+# num2 will be constant.
 def product(num1, num2=100):
     return num1 * num2
 
-setup_logging(verbose=True)
+
+# log everything, including logging.debug messages, to log.txt
+setup_logging("log.txt", verbose=True)
 
 data_list = []
+# smart_open recognizes the .gz extension
 with smart_open("numbers.txt.gz", "r") as f:
     for line in f:
-        data_list.append(float(f.strip()))
+        data_list.append(float(line.strip()))
 
+# items in iterator must be lists or tuples (non-keyword args)
 data_iterator = make_data_iterator(data_list)
+# use multiprocessing if available
 parallelizer = Parallelizer(parallel_mode="processes")
-run_kwargs = {"out_file": "products.txt.gz", "out_str": "%d\n",
-              "out_format": lambda x: x,
-              "logging_str": "Logged %s %d",
-              "logging_format": lambda x: (x[1], x[0]),
-              kwargs={"num2": 100}}
-for result in parallelizer.run(product, data_iterator, **run_kwargs):
-    print(result)
+run_kwargs = {"out_file": "products.txt.gz",  # save one result per line
+              "out_str": "%d\n",  # formatting of output line
+              "out_format": lambda x: x,  # modify result before saving
+              "logging_str": "Multiplied by %d",  # format log line
+              "logging_format": lambda x: (x),  # modify result before logging
+              "kwargs": {"num2": 100}}  # pass constant keyword argument
 
+# run the method on every item in the iterator. If out_file specified,
+# boolean success is returned. Otherwise, result is returned. Use
+# parallelizer.run to run method on all data before returning and return
+# in order.
+for success, data in parallelizer.run_gen(product, data_iterator,
+                                          **run_kwargs):
+    print(success)
 ```
