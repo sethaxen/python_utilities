@@ -1,4 +1,7 @@
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 classifiers = ['Programming Language :: Python',
                'Programming Language :: Python :: 2.7',
@@ -29,4 +32,3 @@ setup(
     keywords=['scripting', 'logging', 'io', 'plotting'],
     classifiers=classifiers
 )
-
