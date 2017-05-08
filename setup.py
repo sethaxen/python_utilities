@@ -23,7 +23,7 @@ classifiers = ['Programming Language :: Python',
 setup(
     name='sdaxen_python_utilities',
     packages=['python_utilities', 'python_utilities.plotting'],
-    version='0.1.3',
+    version='0.1.4',
     description='A collection of useful tools for common Python tasks',
     author='Seth Axen',
     author_email='seth.axen@gmail.com',
