@@ -22,7 +22,7 @@ FUTURES_THREADS_MODE = "threads"
 FUTURES_PROCESSES_MODE = "processes"
 SERIAL_MODE = "serial"
 ALL_PARALLEL_MODES = (MPI_MODE,
-                      FUTURES_THREADS_MODE, FUTURES_PROCESSES_MODE,
+                      FUTURES_PROCESSES_MODE, FUTURES_THREADS_MODE,
                       SERIAL_MODE)
 
 available_parallel_modes = []
@@ -34,8 +34,8 @@ except ImportError:
 
 try:
     import concurrent.futures
-    available_parallel_modes.append(FUTURES_THREADS_MODE)
     available_parallel_modes.append(FUTURES_PROCESSES_MODE)
+    available_parallel_modes.append(FUTURES_THREADS_MODE)
 except ImportError:
     pass
 
@@ -126,7 +126,7 @@ class Parallelizer(object):
         ----------
         parallel_mode : str, optional (default None)
             Mode to use for parallelization. Available modes are
-            ('mpi', 'threads', 'processes', 'serial').
+            ('mpi', 'processes', 'threads', 'serial').
         num_proc : int, optional (default None)
             Maximum number of processors to use. Ignored in MPI mode.
         num_proc_bash_var : str, optional (default None)
@@ -181,8 +181,8 @@ class Parallelizer(object):
                         mode_num_proc, repr(parallel_mode)))
                     continue
             elif (mode_num_proc is None
-                  and parallel_mode in (FUTURES_THREADS_MODE,
-                                        FUTURES_PROCESSES_MODE)):
+                  and parallel_mode in (FUTURES_PROCESSES_MODE,
+                                        FUTURES_THREADS_MODE)):
                 mode_num_proc = multiprocessing.cpu_count()
                 logging.info("num_proc is not specified. %s mode will use all %d processes" % (
                     repr(parallel_mode), mode_num_proc))
@@ -514,7 +514,7 @@ if __name__ == "__main__":
     data_list = range(100)
     data_iterator = make_data_iterator(data_list, "test")
 
-    parallelizer = Parallelizer(parallel_mode=FUTURES_THREADS_MODE)
+    parallelizer = Parallelizer(parallel_mode=FUTURES_PROCESSES_MODE)
 
     run_kwargs = {"out_file": "test_out.txt", "out_str": "%d\n",
                   "out_format": lambda x: x,
