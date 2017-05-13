@@ -30,6 +30,6 @@ setup(
     license='MIT',
     url='https://github.com/sdaxen/python_utilities',
     download_url='https://github.com/sdaxen/python_utilities/tarball/0.1.4',
-    keywords=['scripting', 'logging', 'io', 'plotting'],
+    keywords=['parallelization', 'scripting', 'logging', 'io', 'plotting'],
     classifiers=classifiers
 )
