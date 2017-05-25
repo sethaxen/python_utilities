@@ -21,6 +21,17 @@ class HDF5Buffer(object):
     of the file being left open are low if a kill signal is sent."""
 
     def __init__(self, filename, write_mode="w", max_size=HDF5_BUFFER_SIZE):
+        """Create the buffer.
+
+        Parameters
+        ----------
+        filename : str
+            HDF5 filename
+        write_mode : str, optional
+            Mode to use for writing ("w" for write, "a" for append)
+        max_size : int, optional
+            Maximum number of objects to store in buffer before flushing.
+        """
         self.filename = filename
         self.buffer = {}
         self.max_size = max_size
@@ -38,7 +49,7 @@ class HDF5Buffer(object):
             Name of group.
         group_dict : dict
             Dict where keys are dataset names and values are kwargs for
-            HDF5 `create_dataset` command.
+            h5py `Group.create_dataset` method.
         """
         logging.debug("Adding group to HDF5 buffer.")
         self.buffer.update({name: group_dict})
@@ -47,15 +58,18 @@ class HDF5Buffer(object):
             self.flush()
 
     def open(self, write_mode="a"):
+        """Open HDF5 file."""
         import h5py
         self.filehandle = h5py.File(self.filename, write_mode)
 
     def close(self):
+        """Close HDF5 file if it is open."""
         if self.filehandle is not None:
             self.filehandle.close()
             self.filehandle = None
 
     def flush(self):
+        """Write buffered items to HDF5 file and clear."""
         logging.debug("Flushing HDF5 buffer to %s" % self.filename)
         if self.filehandle is None:
             self.open()
@@ -68,7 +82,7 @@ class HDF5Buffer(object):
         self.size = 0
 
     def __del__(self):
-        """Flush to file upon destruction."""
+        """Flush buffer to file upon destruction."""
         self.flush()
 
 
