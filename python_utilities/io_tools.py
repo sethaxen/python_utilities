@@ -72,7 +72,7 @@ class HDF5Buffer(object):
         """Write buffered items to HDF5 file and clear."""
         logging.debug("Flushing HDF5 buffer to %s" % self.filename)
         if self.filehandle is None:
-            self.open()
+            self.open(write_mode="a")
         for group_name, group_dict in self.buffer.iteritems():
             conf_grp = self.filehandle.create_group(group_name)
             for data_name, data_kwargs in group_dict.iteritems():
