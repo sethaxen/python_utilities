@@ -67,6 +67,10 @@ class HDF5Buffer(object):
         self.buffer = {}
         self.size = 0
 
+    def __del__(self):
+        """Flush to file upon destruction."""
+        self.flush()
+
 
 def touch_dir(dirname):
     """Create directory if it doesn't exist.
