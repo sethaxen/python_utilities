@@ -99,7 +99,8 @@ def touch_dir(dirname):
             os.makedirs(dirname)
         except OSError:
             if not os.path.exists(dirname):
-                logging.exception("Failed to create %s.", exc_info=True)
+                logging.exception("Failed to create %s." % dirname,
+                                  exc_info=True)
 
 
 def smart_open(filename, mode="r", *args, **kwargs):
