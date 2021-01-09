@@ -10,7 +10,7 @@ This package arose from a desire to standardize useful methods and classes I fou
 
 ## Installation
 `python_utilities` may be installed in three ways, in order of preference:
-1. Using conda: `conda install -c sdaxen sdaxen_python_utilities`
+1. Using conda: `conda install -c conda-forge sdaxen_python_utilities`
 2. Using pip: `pip install sdaxen_python_utilities`
 3. From GitHub:
    1. Download the source from this repository
