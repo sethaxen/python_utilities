@@ -63,7 +63,10 @@ def make_data_iterator(data_entries, *iterables):
                followed by corresponding items in `iterables`.
     """
     from itertools import repeat, cycle
-    from collections import Iterator
+    try:
+        from collections.abc import Iterator
+    except ImportError:  # python < 3.10
+        from collections import Iterator
 
     new_iterables = [iter(data_entries), ]
     for iterable in iterables:
