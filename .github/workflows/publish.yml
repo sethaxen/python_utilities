@@ -26,7 +26,7 @@ jobs:
         mkdir install_test
         cd install_test
         python -m pip install ../dist/*.whl
-        python -c "import sdaxen_python_utilities"
+        python -c "import python_utilities"
         cd ..
     - name: Upload to PyPI
       uses: pypa/gh-action-pypi-publish@master
